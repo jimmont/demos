@@ -1,0 +1,142 @@
+<!doctype html>
+<html><head><title>tree</title>
+<script type="text/javascript" src="fabric.js"></script>
+</head><body>
+<script type="text/javascript">
+var _canvas = document.createElement('canvas');
+_canvas.id = 'c';
+_canvas.width = window.innerWidth;
+_canvas.height = window.innerHeight;
+document.body.appendChild(_canvas);
+var _i = 0;
+function BinaryPoint(options){
+	this.parent = options.parent || false;
+	this.state = !!options.state;
+	this.children = [];
+	this.name = 'point'+(++_i);
+	var neutral = this.colors.neutral, dark = this.colors.dark, light = this.colors.light;
+	var o = {left: 20, top: 20, strokeWidth:5, radius:10, fill:light,stroke:neutral};
+	this.point = new fabric.Circle({strokeWidth:5, radius:22, fill:(this.state ? light:dark),stroke:neutral});
+	this.toggleChild1 = new fabric.Circle(o);
+	o.fill = dark, o.left *= -1;
+	this.toggleChild0 = new fabric.Circle(o);
+	this.ui = new fabric.Group([this.point, this.toggleChild0, this.toggleChild1], {left: options.x, top: options.y});
+	this.ui.point = this;
+	this.toggleChild1.parent = this.toggleChild0.parent = this.ui;
+	this.toggleChild1.color = 'light';
+	this.toggleChild0.color = 'dark';
+	this.toggleChild1.name = 'toggleChild1';
+	this.toggleChild0.name = 'toggleChild0';
+	this.ui.hasControls = this.ui.hasBorders = false;
+	var lineOpts = {strokeWidth:5,fill:neutral,selectable:false};
+	this.line1 = new fabric.Line([options.x, options.y, options.x, options.y],lineOpts);
+	this.line0 = new fabric.Line([options.x, options.y, options.x, options.y],lineOpts);
+
+	canvas.add(this.line0,this.line1);
+	canvas.sendToBack(this.line0);
+	canvas.sendToBack(this.line1);
+};
+BinaryPoint.prototype = {
+	colors: {light:'#cf0', dark: '#222', neutral: '#777', kill:'#f00'},
+	drawLine: function(removal){
+		var x, y, ctrl, line, child, i=0;
+		while(child=this.children[i++]){
+			line = child.state ? 1:0;
+			ctrl = this['toggleChild'+line];
+			line = this['line'+line];
+			x = this.ui.left+ctrl.left;
+			y = this.ui.top+ctrl.top;
+			line.set(
+			removal && child.state == removal.state ? {x1:x,y1:y,x2:x,y2:y} :
+				{x1:x,y1:y,x2:child.ui.left,y2:child.ui.top}
+			);
+		}
+		if(this.parent){
+			line = this.state ? 1:0;
+			ctrl = this.parent['toggleChild'+line];
+			line = this.parent['line'+line]
+			line.set(
+				{x1:this.parent.ui.left+ctrl.left,y1:this.parent.ui.top+ctrl.top,x2:this.ui.left,y2:this.ui.top}
+			);
+		}
+		canvas.renderAll();
+	},
+	toggleChild: function(pt,control){
+		switch(control.getFill()){
+		case this.colors.kill:
+		// remove children reset control
+			this.drawLine({state:control.point.state});
+			this.removeChild(control.point);
+			control.setFill(this.colors[control.color]);
+		break;
+		default:
+			control.setFill(this.colors.kill);
+			var point = new BinaryPoint({
+				x:pt.x,
+				y:pt.y,
+				parent: control.parent.point,
+				state: control.color == 'light'
+			});
+			control.point = point;
+			this.children.push(	point );
+			canvas.add(point.ui);
+		};
+		canvas.renderAll();
+	},
+	removeChild: function(child){
+		var i=0, l = this.children.length;
+		while(i<l){
+			if(this.children[i]==child) this.children.splice(i,1);
+			i++;
+		};
+		child.removeChildren();
+		canvas.remove(child.ui);
+		canvas.remove(child.line1);
+		canvas.remove(child.line0);
+		canvas.renderAll();
+	},
+	removeChildren: function(){
+	// remove the child and add the control to the canvas
+		var child;
+		while(child=this.children.shift()){
+			if(child.children.length) child.removeChildren();
+			canvas.remove(child.line1);
+			canvas.remove(child.line0);
+			canvas.remove(child.ui);
+		};
+	}
+};
+
+
+var canvas = new fabric.Canvas('c', { selection: false });
+canvas.on('mouse:up', function(o){
+	if(!o.target || !o.target.point) return;
+	var p = canvas.getPointer(o.e), t = o.target;
+	var c, i = 1, x;
+	while(c=t.objects[i++]){
+		x = p.x - t.left, y = p.y - t.top;
+		if(x >= (c.left-c.radius) && x <= (c.left+c.radius) && y >= (c.top-c.radius) && y <= (c.top+c.radius)){
+			o.target.point.toggleChild(p,c);
+			break;
+		};
+	};
+});
+var root = new BinaryPoint({x:_canvas.width/2,y:30});
+canvas.on('object:moving', function(e){
+	if(!e.target || !e.target.point) return;
+	e.target.point.drawLine();
+});
+canvas.add(
+new fabric.Text('click the dials to add or remove points', { 
+          fontFamily: 'sans-serif', 
+          left: 200,
+          top: 18,
+		width:200,
+          fontSize: 18,
+          textAlign: "left",
+          fill:"#000"
+})
+);
+canvas.add(root.ui);
+</script>
+</body></html>
