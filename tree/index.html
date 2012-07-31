@@ -127,10 +127,10 @@ canvas.on('object:moving', function(e){
 	e.target.point.drawLine();
 });
 canvas.add(
-new fabric.Text('click the dials to add or remove points', { 
+new fabric.Text('drag the dials to rearrange\nclicking the small dials adds a child\nclicking a red dial removes its attached children', { 
           fontFamily: 'sans-serif', 
           left: 200,
-          top: 18,
+          top: 38,
 		width:200,
           fontSize: 18,
           textAlign: "left",
