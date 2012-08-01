@@ -1,0 +1,59 @@
+<!doctype html>
+<html><head><title>carousel</title>
+<!--
+Integrate the following carousel in HTML 5 & CSS 3
+Implement Carousel JS behavior
+Details:
+Full window, 10 panels, no images, only code
+Magnetically ﬁx center panel to window center
+No JS Library
+-->
+<style>
+*{margin:0;padding:0;}
+html, body{height:100%;background:#000;}
+#carousel{position:relative;width:100%;height:100%;min-height:400px;background: -webkit-gradient(linear, left top, left bottom, from(rgb(0,5,39)), to(#5F6279));overflow:hidden;}
+#wrap{display:table;position:relative;left:0;top:0;height:100%;min-height:400px;-webkit-transition:All 500ms ease;}
+a{display:table-cell;width:400px;vertical-align:middle;}
+span{display:block;background:-webkit-gradient(linear, left top, left bottom, from(#788CFF), to(#4252B3));border-radius:20px;-webkit-box-shadow: 0px 0px 5px #000000;box-shadow: 0px 0px 20px #000000;height:200px;width:200px;margin:0 100px 0 100px;-webkit-transition:All 500ms ease;}
+.active span{width:300px;height:300px;margin:0 50px 0 50px;}
+</style>
+</head><body>
+<div id="carousel">
+<p id="wrap">
+	<a><span> </span></a>
+	<a><span> </span></a>
+	<a><span> </span></a>
+	<a><span> </span></a>
+	<a><span> </span></a>
+
+	<a><span> </span></a>
+	<a><span> </span></a>
+	<a><span> </span></a>
+	<a><span> </span></a>
+	<a><span> </span></a>
+
+</p>
+</div>
+<script type="text/javascript">
+function center(el){
+	if(!el) return;
+	var l = el.offsetLeft + (el.offsetWidth/2);
+	l = (window.innerWidth/2)-l;
+	document.querySelector('#wrap').style.left = l+'px';
+};
+window.addEventListener('resize',function(e){
+	center(document.querySelector('#carousel .active'));
+},false);
+document.querySelector('#carousel').addEventListener('click',function(e){
+	var el = e.target;
+	if(!el || !el.nodeName || el.nodeName != 'SPAN') return;
+	var active = document.querySelector('#carousel .active');
+	if(active) active.className = '';
+	el.parentNode.className = 'active';
+	center(el);
+},false);
+var evt = document.createEvent("MouseEvents");
+evt.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+document.querySelectorAll('#carousel span').item(0).dispatchEvent(evt);
+</script>
+</body></html>
