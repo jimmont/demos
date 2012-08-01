@@ -1,0 +1,131 @@
+<!doctype html>
+<head><title>stars + selectable</title>
+<style>
+body{background:white;color:black;font-family:georgia,verdana,sans-serif;}
+div{position:relative;height:30px;margin:5px;}
+.star b, .star{display:block;width:147px;height:30px;position:absolute;cursor:pointer;background-image:url(stars.gif);background-position:top left;}
+.star b{background-position:bottom left;clip:rect(0, 0, 30px, 0);}
+.star1 b{clip:rect(0, 30px, 30px, 0);}
+.star2 b{clip:rect(0, 60px, 30px, 0);}
+.star3 b{clip:rect(0, 90px, 30px, 0);}
+.star4 b{clip:rect(0, 120px, 30px, 0);}
+.star5 b{clip:rect(0, 150px, 30px, 0);}
+
+table{width:300px;user-select:none;-moz-user-select:none;-webkit-user-select:none;}
+table, td{border:1px solid #ddd;}
+td,th{text-align:left;}
+tr.selected{background-color:#ddd;}
+</style>
+</head><body>
+<h3>stars + selectable</h3>
+<div><span class="star"></span></div>
+<div><span class="star"></span></div>
+<div><span class="star"></span></div>
+<div><span class="star"></span></div>
+<div><span class="star"></span></div>
+
+<table>
+<thead>
+<tr><th><input type="checkbox"></th><th>heading</th></tr>
+</thead>
+<tbody>
+<tr><td><input type="checkbox"></td><td>item</td></tr>
+<tr><td><input type="checkbox"></td><td>item</td></tr>
+<tr><td><input type="checkbox"></td><td>item</td></tr>
+<tr><td><input type="checkbox"></td><td>item</td></tr>
+<tr><td><input type="checkbox"></td><td>item</td></tr>
+<tr><td><input type="checkbox"></td><td>item</td></tr>
+<tr><td><input type="checkbox"></td><td>item</td></tr>
+<tr><td><input type="checkbox"></td><td>item</td></tr>
+<tr><td><input type="checkbox"></td><td>item</td></tr>
+<tr><td><input type="checkbox"></td><td>item</td></tr>
+</tbody>
+</table>
+<script src="jquery.js"></script>
+<script>
+$(function(){
+	$('.star').append('<b></b>').each(function(){
+		var star = this, width = this.offsetWidth/5, adjust = Math.ceil;
+		function move(e){
+			var c = star.className, n = 'star'.concat( adjust( e.offsetX / width ) );
+			e.stopPropagation();
+			if(c.indexOf(n) < 0) this.className = 'star '.concat( n );
+		};
+		function setup(e){
+			e.stopPropagation();
+			$(document).bind('mousemove',reset);
+			$(this).unbind('mousemove',setup).bind('mousemove',move);
+		};
+		function reset(e){
+			$(this).unbind('mousemove',reset);
+			$(star).unbind('mousemove',move).bind('mousemove', setup);
+			star.className = 'star';
+		};
+		$(this).bind('click', function(e){
+			var n = adjust( e.offsetX / width );
+			$.ajax({
+				url: "save.js?".concat(n),
+				context: this,
+				error: function(a,b,c){ alert("sorry, couldn't save the rating"); },
+				success: function(data,s,x){
+					var n = x.responseText.replace(/[^0-9]/g,'');
+					if(isNaN(parseInt(n,10))) return;
+					star = false;
+					$(this).unbind('click').unbind('mousemove');
+					this.className = 'star star'.concat(n);
+				}
+			});
+		}).bind('mousemove',setup);
+	});
+
+
+	// selectable
+	$('table').each(function(){
+		var i = 0, parent = this.parentNode, tbody = this.getElementsByTagName('tbody')[0], item, list = tbody.getElementsByTagName('tr');
+		parent.removeChild(this);
+		while(item = list.item(i++)){
+			item.getElementsByTagName('td')[1].appendChild(document.createTextNode(' '.concat(i)));
+		};
+		$('thead input',this).click(function(e){
+			var checked = this.checked;
+			$(tbody.getElementsByTagName('input')).each(function(){
+				this.checked = checked;
+			});
+		});
+
+		var range = {start:0, end: 0};
+		$('tr',tbody).click(function(e){
+			if(!e.shiftKey){
+				range.start = range.end = 0;
+				return true;
+			}
+			e.preventDefault();
+			var i = this.rowIndex;
+			if(!range.start){
+				range.start = i;
+				this.className = 'selected'
+			}else if(!range.end && (range.start != i)){
+				this.className = 'selected'
+				range.end = i;
+				var start, end;
+				if(range.end < range.start){
+					start = range.end, end = range.start;
+				}else{
+					start = range.start, end = range.end;
+				};
+				range.start = range.end = 0;
+				var item, list = tbody.getElementsByTagName('tr');
+				start--; // convert to base 0
+				while(start<end){
+					item = list[start++];
+					item.className = '';
+					item = item.getElementsByTagName('input')[0];
+					item.checked = !item.checked;
+				}
+			};
+		});
+		parent.appendChild(this);
+	});
+});
+</script>
+</body></html>
