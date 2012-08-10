@@ -1,0 +1,156 @@
+<!doctype html>
+<html><head><title>find b in a</title></head><body>
+<pre id="pre"></pre>
+<div id="a">
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b id="bold">sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<ul><li>item
+</li><li>item
+</li><li>item
+</li><li>item
+</li><li>item
+</li><li>item
+</li><li>item
+</li></ul>
+</div>
+<div id="b">
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<p>lorum ipsum dolor <b>sit</b> amet </p>
+<ul><li id="list-item">item
+</li><li>item
+</li><li>item
+</li><li>item
+</li><li>item
+</li><li>item
+</li><li>item
+</li></ul>
+</div>
+<script type="text/javascript">
+var ways_to = {
+	find_b_in_a_from_parent: function (a, b){
+		var hasIt = false;
+		function childIn(children, b){
+			var child, i=0;
+			while(child=children[i++]){
+				if(child.nodeType != 1) continue;
+	
+				if(hasIt || child == b){
+					hasIt = true;
+					return;
+				}else if(child.childNodes.length){
+					childIn(child.childNodes, b); 
+				};
+			};
+		};
+		childIn(a.childNodes, b);
+		return hasIt;
+	},
+	find_b_in_a_from_child: function(a, b){
+		var hasIt = false, p=b;
+		while(p=p.parentNode){
+			if(a==p){
+				hasIt=true;
+				break;
+			};
+		};
+		return hasIt;
+	},
+	find_b_in_a_by_attr: function(a, b){
+		var ident = 'data-quick-check'+(new Date).getTime();
+		b.setAttribute(ident,1);
+		var hasIt = (new RegExp(ident)).test(a.innerHTML);
+		b.removeAttribute(ident);
+		return hasIt;
+	}
+};
+
+function try_finding_b_in_a(){
+	var results = {};
+	function runAllWith(a, b){
+		var result, i, now;
+		for(var fn in ways_to){
+			i = 50;
+			result = results[fn] = results[fn] || {
+				result: false,
+				total: 0,
+				time: 0
+			};
+			while(i--){
+				now = (new Date).getTime();
+				result.result = ways_to[fn](a, b);
+				result.time += (new Date).getTime()-now;
+				result.total++;
+			};
+		};
+	};
+
+	function $(_id){
+		return document.getElementById(_id);
+	}
+	$('pre').appendChild(document.createTextNode('(average ms =  total time in ms / total runs)\n\r'));
+	function report(){
+		var result;
+		for(var p in results){
+			result = results[p];
+			delete results[p];
+			$('pre').appendChild(document.createTextNode('result '+p+' returned '+result.result+', '+((result.time/result.total).toFixed(2))+'='+result.time+'/'+result.total+'\n\r'));
+		}
+	}
+	// fail
+	runAllWith($('a'), $('b'));
+	report();
+	// success
+	runAllWith($('a'), $('bold'));
+	report();
+	// fail
+	runAllWith($('a'), $('b'));
+	report();
+	// success
+	runAllWith($('a'), $('bold'));
+	report();
+};
+window.onload = try_finding_b_in_a;
+</script>
+</body></html>
