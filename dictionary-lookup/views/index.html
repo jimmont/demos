@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head><title>{{=it.title}}</title>
+<meta charset="utf-8" name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+html,body{margin:0;padding:0;}
+body{margin:3rem 8px;font-size: 14px;font-family:"Lucida Grande", Helvetica, Arial, sans-serif;box-sizing:border-box;-webkit-text-size-adjust: 100%;}
+.fix{position:fixed;top:0;left:0;width:100%;background:rgba(255,255,255,0.9);z-index:111;display:table;height:3rem;}
+.fix h1{font-size:smaller;display:table-cell;text-align:center;vertical-align:middle;}
+.fix form{display:table-cell;vertical-align:middle;}
+h2{margin:0 0 0 1rem;}
+div{height:auto;8rem;overflow:hidden;position:relative;margin-bottom:0;}
+h2{cursor:pointer;}
+.example:before, .definition:before{content:'definitions:';display:block;font-style:italic;font-size:larger;}
+li{list-style:decimal outside none;margin:0.5rem;}
+.example:before{content:'examples:';}
+@media (max-width:320px){ body{width:320px;} }
+@media (min-width:321px) and (max-width:480px){ body{width:480px;} }
+form{margin:0;}
+</style>
+</head><body>
+<div class="fix">
+<h1>word: {{=it.word}}</h1>
+<form><input id=search type=text placeholder=word> <input type=submit value=search></form>
+</div>
+{{~it.definitions :definition}}
+<div>
+<h2>{{=definition.label}}</h2>
+<ul class="definition">{{~definition.definitions :text}}
+<li>{{=text}}</li>
+{{~}}</ul>
+<ul class="example">{{~definition.examples :text}}
+<li>{{=text}}</li>
+{{~}}</ul>
+</div>
+{{~}}
+<script>
+document.querySelector('form').addEventListener('submit',function(e){
+	e.preventDefault();
+	var word = this.search.value.replace(/^\s+/,'').replace(/\s+$/,'');
+	if(/[a-z]/i.test(word)) location.href='/'+word;
+},false);
+setTimeout(function(){ window.scrollTo(0,0)},0);
+</script>
+</body></html>

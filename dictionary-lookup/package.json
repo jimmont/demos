@@ -1,0 +1,14 @@
+{
+	"name": "api-ipa"
+	,"description": "API IPA. A simple app that calls 1 or 2 random API's."
+	,"version": "0.0.1"
+	,"private": true
+	,"scripts": {
+		"start": "node app"
+	}
+	,"dependencies": {
+		"express": "3.2.x"
+		,"express-dot":""
+		,"jsdom":""
+	}
+}

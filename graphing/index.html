@@ -1,0 +1,205 @@
+<!doctype html>
+<html><head><title>graphing interactive</title>
+<style type="text/css">
+*{font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;}
+.graphing{border:1px solid #eee;padding:0.5em;}
+form{display:none;}
+table, tr, td{position:relative;}
+table{border-collapse:collapse;}
+td, th{padding:0.25em;width:6em;}
+td{position:relative;}
+td form{display:block;position:absolute;top:0;left:0;}
+input{width:100%;box-sizing: border-box;}
+tr:nth-child(2n+1){background-color:#eee;}
+td:nth-child(2n+1){background-color:#eee;}
+.button, th{border-bottom:1px solid #aaa;text-align:left;text-transform:capitalize;background: -webkit-gradient(linear, left top, left bottom, from(#fff), to(#ddd));}
+.button, canvas{display:block;}
+.button, table, canvas{border:1px solid #aaa;margin: 0 auto 0.5em auto;}
+.button{border-radius:5px;border:1px solid #aaa;padding:0.25em;width:8em;text-align:center;}
+</style>
+</head><body>
+<script type="text/javascript">
+var Graph = {
+	lines: [
+		'101,103,67,98'.split(','),
+		'456,467,789,567'.split(','),
+		'676,676,989,123'.split(','),
+	],
+	init: function(){
+		function create(type){
+			return document.createElement(type);
+		};
+		var graph = this
+		, unit = 30
+		, columnWidth = 110
+		, columns = 4
+		, rows = 10
+		, root = create('div')
+		, canvas = create('canvas')
+		, ctx = canvas.getContext ? canvas.getContext('2d'):false
+		, table = create('table')
+		, tr = create('tr')
+		, td = create('td')
+		, th = create('th')
+		, form = create('form');
+
+		root.className = 'graphing';
+		var heading = 'x,data 1,data 2,data 3'.split(',');
+		var increment = 100
+		, offset = unit / 2
+		, x = 0;
+
+		canvas.width = columnWidth * (columns - 1) + unit;
+		canvas.height = unit * (rows + 1); // unit * 10 rows with 1 row extra as margin
+
+		root.appendChild(canvas);
+		root.appendChild(table);
+
+		if(!ctx){ // confirm canvas support
+			root.innerHTML = "Sorry, canvas (or possibly addEventListener) isn't supported.";
+			document.body.appendChild(root);
+			return
+		};
+		// setup editing
+		form.innerHTML = '<input type="text">';
+
+		// setup headers
+		var item, n, j = 0, i = 0, row = tr.cloneNode(1), cell;
+		while(item = heading.shift()){
+			row.appendChild( cell = th.cloneNode(1) );
+			cell.innerHTML = item;
+		};
+		table.appendChild(row);
+
+		// setup data
+		i = 0;
+		while(i<columns){
+			row = tr.cloneNode(1);
+			row.appendChild( cell = td.cloneNode(1) );
+			cell.innerHTML = increment * (i+1); // line x value for row
+			j = 0;
+			while(n = this.lines[j++]){ // each line's y values
+				row.appendChild( cell = td.cloneNode(1) );
+				cell.setAttribute('data-value', n[i]);
+				cell.innerHTML = n[i];
+			};
+			table.appendChild(row);
+			i++;
+		};
+
+		function doUpdate(e){
+			e.preventDefault();
+			var input = e.type == 'submit' ? this.getElementsByTagName('input')[0] : this;
+			// check for change
+			var was = Math.round(input.parentNode.parentNode.getAttribute('data-value') * 1 || 0);
+			var now = Math.round(input.value.replace(/[^0-9-.]/g, '') * 1 || 0);
+			if(was != now){
+				var l = input.parentNode.parentNode;
+				l.setAttribute('data-value', now);
+				l.textContent = now;
+				graph.draw();
+			};
+			try{ // wierd document blur error
+			root.appendChild(form);
+			}catch(err){}
+		};
+		form.addEventListener('submit', doUpdate, false);
+		form.getElementsByTagName('input')[0].addEventListener('blur', doUpdate, false);
+		document.addEventListener('click', function(e){
+			e.stopPropagation();
+			if(!e.target.nodeName || e.target.nodeName != 'TD' || e.target.cellIndex < 1) return;
+			var input = form.getElementsByTagName('input')[0];
+			input.value = e.target.getAttribute('data-value');
+			e.target.appendChild(form);
+			input.focus();
+		}, false);
+
+		this.draw(ctx, unit, columns, columnWidth, rows, increment, offset, root, canvas);
+		this.draw();
+		var button = document.createElement('a');
+		button.innerHTML = 'Refresh';
+		button.className = 'button';
+		button.addEventListener('click',this.draw,false);
+		root.appendChild(button);
+		document.body.appendChild(root);
+	},
+	draw: function(ctx, unit, columns, columnWidth, rows, increment, offset, root, canvas){
+		this.draw = function(){
+			// grab first td, walk thru each to get x, then walk thru y points to get full lines as objects,
+			// then draw each line
+// or just pass in columns and get all td's then divide by 4 to walk thru once and create each line with just the right index
+			var j, l, i = 0, x = 0, y = 0, height = canvas.height, width = canvas.width;
+			var topOffset = height - offset,
+				leftOffset = Math.round( (width - unit) / (columns - 1) );
+
+			function toPixel(point){
+				x = Math.round( (((point.x || 0)-increment)/increment*columnWidth) + offset );
+				y = Math.round( topOffset - ((point.y || 0) / 100 * unit) );
+				return {x:x,y:y};
+			};
+
+			// clear the canvas
+			ctx.clearRect(0,0,width,height);
+			// draw the grid
+			ctx.strokeStyle = 'rgba(200,200,200,1)';
+			ctx.lineWidth = 1;
+			ctx.beginPath();
+			totalRows = rows + 1;
+
+			var line, point, color;
+			// draw the horizontal rules
+			while(i < totalRows){
+				point = toPixel({y:i*100});
+				ctx.moveTo(0, point.y);
+				ctx.lineTo(width, point.y);
+				++i;
+			};
+			i = 0, x = 0, y = 0;
+			// draw the vertical rules
+			while(i < columns){
+				x = (i+1) * increment; // start at 100
+				point = toPixel({x:x});
+				ctx.moveTo(point.x, 0);
+				ctx.lineTo(point.x, height);
+				++i;
+			};
+			ctx.stroke();
+
+			// get the points for each line
+			var cells = root.getElementsByTagName('td');
+			var colors = '#f60,#0cf,#000,#cf0,#f06'.split(',');
+			while(colors.length < columns){
+				colors = colors.concat(colors);
+			};
+			i = 0, j = 0, l = cells.length;
+			var lines = new Array(columns-1);
+			while(i < l){
+				j = i%columns;
+				++i;
+				if(!j){
+					x = cells[i-1].textContent * 1;
+					continue; // first col is the x value
+				};
+				y = cells[i-1].textContent * 1;
+				(lines[j-1] = lines[j-1] || []).push({x:x, y:y});
+			};
+
+			while(line = lines.shift()){
+				ctx.beginPath();
+				ctx.lineWidth = 5;
+				ctx.strokeStyle = colors.shift();
+				point = line.shift();
+				point = toPixel(point);
+				ctx.moveTo(point.x,point.y);
+				while(point = line.shift()){
+					point = toPixel(point);
+					ctx.lineTo(point.x,point.y);
+				};
+				ctx.stroke();
+			};
+		};
+	}
+};
+Graph.init();
+</script>
+</body></html>
