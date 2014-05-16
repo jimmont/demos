@@ -1,4 +1,6 @@
 
+an AngularJS with D3 barchart demo
+
 to run this:
 
 prerequisites:
