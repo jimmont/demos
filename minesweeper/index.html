@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Minesweeper</title>
+<style>
+html{font-size:1rem;line-height:1.4;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;-webkit-tap-highlight-color: rgba(0, 0, 0, 0);background-color:white;}
+body{margin:0;padding:1em;}
+body,a:link, a:visited{;}
+@-webkit-keyframes loading{
+	0% {opacity:1}
+	100% {opacity:0.1}
+}
+input[type=radio]:after{content:attr(value);text-indent:2em;}
+input[type=radio]{margin-right:8rem;}
+form{display:flex;flex-flow:row wrap;align-items:stretch;align-content:stretch;}
+fieldset{border:0px dotted #ddd;}
+label{font-size:smaller;}
+.values{border-width:1px;}
+.values legend{font-size:smaller;}
+.values input{width:2rem;margin-right:1em;}
+.play, .validate{box-shadow:0 0 8px #cf0;}
+.minesweeper-board{display:flex;flex-flow:column nowrap;align-items:stretch;align-content:stretch;-webkit-user-select:none;}
+.minesweeper-board.lost{user-select:none;}
+.row{margin:0;padding:0;}
+.cell, .mine{display:inline-block;width:1rem;height:1rem;text-align:center;border:1px solid black;font-size:small;cursor:pointer;position:relative;background-color:#ddd;color:#ddd;text-index:-5em;}
+.cheat .mine{background-color:red;}
+.cheat .cell{color:#aaa;}
+.cheat .mine{color:black;background-color:red;}
+.disabled{color:black !important;cursor:auto;}
+.mine.disabled{background-color:#555;color:white;}
+.mine.exploded{background-color:red;}
+</style>
+</head>
+<body ng-view>
+<minesweeper-setup></minesweeper-setup>
+<board></board>
+<script src=angular.min.js></script>
+<script>
+'use strict';
+angular.module('minesweeper',[])
+.directive('minesweeperSetup',function(){
+	return {
+		restrict: 'E'
+		,template: '<form ng-submit="game.start()"><fieldset>'
+			+'<legend>Minesweeper</legend>'
+			+'<label ng-attr-for="{{$id}}-select">setup: </label><select ng-select="chango()" ng-attr-id="{{$id}}-select" ng-change="changeSetup()" ng-model="game.options.active" ng-options="optn.name for optn in game.options" name=setup></select>'
+			+'</fieldset>'
+			+'<fieldset class="values">'
+			+'<legend>&nbsp;{{game.active.name}}</legend>'
+			+'<label ng-attr-for="{{$id}}-width">width: </label><input ng-attr-id="{{$id}}-width" name=width type=number min=5 ng-model="game.active.width">'
+			+'<label ng-attr-for="{{$id}}-height">height: </label><input ng-attr-id="{{$id}}-height" name=height type=number min=5 ng-model="game.active.height">'
+			+'<label ng-attr-for="{{$id}}-mines">mines: </label><input ng-attr-id="{{$id}}-mines" name=mines type=number min=1 ng-model="game.active.mines">'
+			+'</fieldset>'
+			+'<fieldset class="controls">'
+			+'<legend>&nbsp;</legend>'
+			+'<input type=submit value="Play!" class=play>'
+			+'<input type=button value="Save" ng-click="game.save(game.active)">'
+			+'<input type=button value="Validate :)" class=validate ng-click="game.validate()">'
+			+'<input type=button value="Cheat?" ng-click="game.cheat()">'
+			+'</fieldset>'
+			+'</form>'
+		,controller: function($scope,minesweeper){
+			$scope.game = minesweeper;
+			$scope.changeSetup = function(){
+				var active = this.game.active, option = this.game.options.active;
+				active.width = option.width;
+				active.height = option.height;
+				active.mines = option.mines;
+			};
+		}
+	};
+})
+.directive('board',function(){
+	return {
+		restrict: 'E'
+		,scope: true
+		,template: '<section class="minesweeper-board {{game.active.cheat ? \'cheat\':\'\'}} {{game.active.state}}">'
+			+'<div ng-repeat="row in game.active.board track by $index" class=row>'
+			+'<span ng-repeat="cell in row track by $index" class="{{cell.type}}" ng-class="{disabled: cell.disabled, exploded: cell.exploded}" right-click="clik($event)" ng-click="clik($event)">{{cell.type == "mine" ? "*":cell.score}}</span>'
+			+'</div>'
+			+'</section>'
+		,controller: function($scope,minesweeper){
+			$scope.game = minesweeper;
+			$scope.clik = function($event){
+				$event.preventDefault();
+				if(this.cell.disabled || this.game.active.state === 'lost') return;
+				this.cell.disabled = true;
+				if(this.cell.type === 'mine'){
+					// control+click just flags the mine
+					if(!$event.ctrlKey){
+						this.cell.exploded = true;
+						this.game.lose();
+					};
+				}else if(this.cell.score === 0){
+					// reveal surrounding
+					this.game.surrounding(this.cell, this.game.active.board, function(cell){ cell.disabled = true; });
+				};
+			};
+		}
+	};
+})
+.directive('rightClick',function($parse){
+	return function(scope, elem, attrs){
+		var fn = $parse(attrs.rightClick);
+		elem.on('contextmenu',function(event){
+			event.preventDefault();
+			scope.$apply(function(){
+				fn(scope, {$event: event});
+			});
+		});
+	}
+})
+.factory('minesweeper',function(){
+	var item, i, saved, Minesweeper;
+	try{
+		saved = JSON.parse(localStorage.minesweeper);
+	}catch(err){
+		saved = {};
+	};
+
+	Minesweeper = {
+		options: [
+			{name: 'easy', width:8, height:8, mines:10}
+			,{name: 'hard', width:16, height:16, mines:60}
+			,{name: 'custom', width:16, height:16, mines:99}
+		]
+		,active: {}
+		,save: function(game){
+			if(game && game.name) saved[game.name] = game;
+			localStorage.minesweeper = JSON.stringify(saved);
+			return saved;
+		}
+		,cheat: function(){
+			return Minesweeper.active.cheat = !Minesweeper.active.cheat;
+		}
+		,validate: function(){
+			var lose = 0;
+			if(!this.active.board) return;
+			this.active.board.forEach(function(row){
+				row.forEach(function(cell){
+					if(cell.disabled != true && cell.type === 'cell') lose++;
+				});
+			});
+			console.log('missed>',lose);
+			this.lose();
+		}
+		,lose: function(){
+			this.active.state = 'lost';
+			alert('kaboom!');
+		}
+		,start: function(){
+			var game;
+			// using game.active
+			// make sure the acive game has a name 'game'+something
+			// create board model if it doesn't exist
+			// let the board directive handle rendering of the active game
+			game = this.active;
+			if(this.options.active.name.indexOf('game')===0){
+				game = this.active = this.options.active;
+			};
+			game.width = +game.width;
+			game.height = +game.height;
+			game.mines = +game.mines;
+			if(!game.name){
+				game.name = 'game'+ Date.now()
+				game.board = this.board(game);
+				game.state = 'active';
+			};
+		}
+		,mines: function(game){
+		// figure out where to put the mines, must be a better way to do this..
+			var n, count = 0
+			, size = game.width * game.height
+			, max = size - 1
+			, needed = game.mines
+			, mines = Array(size)
+			// limit to max
+			if(needed > max) game.mines = needed = max;
+			while(count < needed){
+				// somewhere in the total board size,
+				// place a random mine at that index
+				n = Math.floor(Math.random() * max);
+				// if we've already generated this index, try again next iteration
+				if(mines[n]) continue;
+				count++
+				mines[n] = true;
+			};
+			return mines;
+		}
+		,board: function(game){
+			// create a 2d array
+			var r, c
+			, neighbor
+			, board = []
+			, mines = this.mines(game)
+			, row, cell
+			, todo = []
+
+			// rows
+			for(r=0;r<game.height;r++){
+				row = [];
+				board.push( row );
+				// cells/columns
+				for(c=0; c < game.width; c++){
+					cell = {
+						type: 'cell'
+						,row: r
+						,cell: c
+						,score: 0
+					};
+					if(mines[(r * game.width) + c ]){
+						cell.type = 'mine';
+						todo.push( cell );
+					};
+					row.push( cell );
+				};
+			};
+
+			board.mines = todo.concat();
+			// now that all the cells exist, update their scores based on the mine positions
+			while(cell = todo.shift()){
+				this.surrounding(cell, board, function(cell){ cell.score++; });
+			};
+
+			return board;
+		}
+		,surrounding: function(cell, board, fn){
+			var r, c, row;
+			r = cell.row;
+			c = cell.cell;
+			row = board[r-1];
+			// the cells above
+			if(row){
+				fn(row[ c-1 ] || {score:0}); 
+				fn(row[ c ] || {score:0}); 
+				fn(row[ c+1 ] || {score:0}); 
+			};
+			// the cells beside (inclusive)
+			row = board[r];
+			if(row){
+				fn(row[ c-1 ] || {score:0}); 
+				fn(row[ c ] || {score:0}); 
+				fn(row[ c+1 ] || {score:0}); 
+			};
+			// the cells below
+			row = board[r+1];
+			if(row){
+				fn(row[ c-1 ] || {score:0}); 
+				fn(row[ c ] || {score:0}); 
+				fn(row[ c+1 ] || {score:0}); 
+			};
+
+		}
+	};
+
+	i=0;
+	while(item = Minesweeper.options[i++]){
+		// setup by name for convenience: options.easy.width
+		Minesweeper.options[ item.name ] = item;
+	};
+	if(saved){
+	// restore saved games
+		for(item in saved){
+			// named 'game' + something
+			if(item.indexOf('game') === 0){
+				Minesweeper.options.push( Minesweeper.options[item] = saved[item] );
+			};
+		}
+	};
+	// setup a default/active game
+	item = Minesweeper.options.active = Minesweeper.options.easy;
+	Minesweeper.active = {
+		name:''
+		,width:item.width
+		,height:item.height
+		,mines:item.mines
+	}
+	return Minesweeper;
+});
+
+angular.bootstrap(document,['minesweeper']);
+</script>
+</body>
+</html>
