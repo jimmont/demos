@@ -1,0 +1,211 @@
+<!doctype html>
+<meta charset="utf-8">
+<html lang="en"><head>
+<title>Mosaic</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+html{font-size:1rem;line-height:1.4;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;-ms-text-size-adjust: 100%;-webkit-text-size-adjust: 100%;-webkit-tap-highlight-color: rgba(0, 0, 0, 0);background-color:white;}
+body{margin:0;padding:1em;}
+body,a:link, a:visited{;}
+@-webkit-keyframes loading{
+	0% {opacity:1}
+	100% {opacity:0.1}
+}
+legend{font-size:small;color:#ddd;}
+fieldset{border:0;}
+input[type=image]{vertical-align:text-bottom;}
+form{z-index:11;position:fixed;top:0.5rem;left:3rem;opacity:0.7;background-color:rgba(255,255,255,0);transition:all 1s;box-shadow:0 0 8px rgba(255,255,255,0);padding:.1rem 1rem .5rem 1rem;border-radius:3px;}
+form:hover, form:focus{opacity:1;background-color:rgba(255,255,255,.8);box-shadow:0 0 8px rgba(255,255,255,.4);}
+form:hover legend{color:#333;box-shadow:0 0 8px white;}
+.mosaic{position:relative;z-index:1;}
+.pin{border:1px solid #ddd;min-width:200px;min-height:30px;box-sizing:border-box;overflow:hidden;line-height:0;}
+.pin img{margin:0;width:100%;}
+.pin nav{display:none;position:absolute;width:100%;min-height:1em;max-height:33%;background:rgba(200,200,200,0.5);left:0;bottom:0;font-size:small;box-sizing:border-box;padding:.2em .5em .1em .5em;line-height:1.3;background-image:linear-gradient(rgba(255,255,255,0.5), transparent);}
+.pin:hover nav{display:block;}
+.pin span{position:absolute;width:auto;right:10px;bottom:10px;white-space:pre;}
+.pin button{box-shadow:0 0 8px rgba(0, 0,0, .5);}
+popup{display:block;width:80%;max-height:80%;border:1px solid #ddd;position:fixed;top:5%;left:10%;z-index:111;line-height:0;}
+popup img{width:100%;}
+popup button{top:45%;left:10px;position:absolute;}
+popup button:nth-of-type(2){left:auto;right:10px;}
+@media (max-width:481px){
+	form{left:1rem;}
+	body{padding:5px;}
+	.pin{max-width:48%;min-width:50px;width:125px;}
+	.pin nav{max-height:50%;min-height:1em;}
+}
+@media (max-width:320px){
+	form{left:0;}
+	.pin{max-width:48%;min-width:25px;width:100px;}
+}
+</style>
+</head>
+<body ng-view ng-controller='mosaicCtl'>
+<form ng-submit="loadProfile()">
+	<input ng-model="username" type=text placeholder='pinterest username' title="Pinterest username">
+	<input type=image src="pinterest.png" alt="load pins" width=16 height=16>
+</form>
+<section mosaic class="mosaic">
+<div ng-repeat="pin in pinterest.pins" class=pin>
+	<img ng-click="popup()" ng-src="{{pin.images.237x.url}}" img-load="redraw($event)">
+	<nav>{{pin.description}}<span><button ng-init="i = $index" ng-click="previous()">&laquo;</button> <button ng-click="next()">&raquo;</button></span></nav>
+</div>
+</section>
+<popup ng-attr-style="display:{{popupSvs.show ? 'block':'none'}};"><img ng-src="{{popupSvs.pin.images.237x.url}}"><button ng-click="previous()">&laquo;</button> <button ng-click="next()">&raquo;</button></popup>
+<script src=packery.js></script>
+<script src=angular.min.js></script>
+<script>
+'use strict';
+angular.module('mosaic',[])
+.run(function($rootScope){
+	$rootScope.username = 'onlyinsf';'tranbachkhoa';
+	$rootScope.isMobile = /ipad|iphone|mobile/i.test(navigator.userAgent);
+})
+.controller('mosaicCtl',function($scope, pinterest){
+	$scope.loadProfile = function(){
+		this.$root.username = this.username;
+	}
+})
+.factory('popupSvs',function($rootScope){
+	var doc = angular.element(document)
+	,svs = {
+		show: false
+		,pin: {}
+		,click: function(e){
+			if(angular.element(e.target).scope().pin === svs.pin || e.target.offsetParent.nodeName === 'POPUP'){
+				return;
+			}
+			$rootScope.$apply(function(){
+				svs.show = false;
+				doc.off('click', svs.click);
+			});
+		}
+	};
+	$rootScope.popupSvs = svs;
+	$rootScope.$watch('popupSvs.pin',function(nu,old){
+		if(!nu || !nu.images || nu === old || svs.show) return;
+		svs.show = true;
+		doc.on('click',svs.click);
+	});
+	return svs;
+})
+.directive('popup',function(){
+	return {
+		restrict: 'E'
+		,controller: function($scope, popupSvs, pinterest){
+			$scope.popupSvs = popupSvs;
+			$scope.pinterest = pinterest();
+			$scope.next = function(){
+				this.popupSvs.i++;
+				if(this.popupSvs.i >= this.pinterest.pins.length) this.popupSvs.i = 0;
+				this.popupSvs.pin = this.pinterest.pins[ this.popupSvs.i ];
+			}
+			$scope.previous = function(){
+				this.popupSvs.i--;
+				if(this.popupSvs.i < 0) this.popupSvs.i = this.pinterest.pins.length - 1;
+				this.popupSvs.pin = this.pinterest.pins[ this.popupSvs.i ];
+			}
+		}
+	}
+})
+.directive('mosaic',function(pinterest, popupSvs){
+	return {
+		restrict: 'A'
+		,controller: function($scope){
+			$scope.pinterest = pinterest();
+			$scope.next = function(){
+				this.i++;
+				if(this.i >= this.pinterest.pins.length) this.i = 0;
+				this.pin = this.pinterest.pins[ this.i ];
+			};
+			$scope.previous = function(){
+				this.i--;
+				if(this.i < 0) this.i = this.pinterest.pins.length - 1;
+				this.pin = this.pinterest.pins[ this.i ];
+			}
+		}
+		,link:function(scope, elem, attrs, ctrl){
+			scope.redraw = function(e){
+				if(this.pack) this.pack.layout();
+			};
+			scope.popup = function(){
+				if(popupSvs.show){
+				// hassle for touch devices
+				// TODO
+					popupSvs.show = false;
+					return;
+				};
+
+				popupSvs.i = this.i;
+				popupSvs.pin = this.pin;
+				popupSvs.show = true;
+			}
+			scope.$watch('pinterest.pins',function(nu,old,scope){
+				if(nu && nu.length && nu != old){
+					scope.pack = new Packery(elem[0], {itemSelector: '.pin', gutter: 5});
+				}
+			});
+		}
+	};
+})
+.directive('imgLoad', function($parse){
+	return {
+		restrict: 'A'
+		,link: function(scope, elem, attr){
+			var fn = $parse(attr.imgLoad)
+			function handler(e){
+				scope.$apply(function apply(){
+					fn(scope, {$event: e});
+				});
+			};
+			elem.on('load', handler)
+			scope.$on('$destroy',function cleanup(){
+				elem.off('load', handler);
+			});
+		}
+	};
+})
+.directive('rightClick',function($parse){
+	return function(scope, elem, attr){
+		var fn = $parse(attr.rightClick);
+		elem.on('contextmenu',function(event){
+			event.preventDefault();
+			scope.$apply(function(){
+				fn(scope, {$event: event});
+			});
+		});
+	}
+})
+.factory('pinterest',function($http, $rootScope){
+	var data = {}, req, Pinterest = function(){
+		// http://www.pinterest.com/onlyinsf/
+		var username = $rootScope.username
+		,url = 'http://api.pinterest.com/v3/pidgets/users/'+username+'/pins/?callback=JSON_CALLBACK'
+		//url = 'http://192.168.0.106:8123/pins.json?callback=JSON_CALLBACK'
+		if(data.username != username){
+			data.username = username;
+			req = req || $http.jsonp(url,{})
+			.success(function(res, status, hdr, config){
+				var p, i, l;
+				for(p in res.data){
+					data[p] = res.data[p];
+				};
+				req = false;
+			})
+			.error(function(res, status, hdr, config){
+				data.username = req = false;
+			});
+		};
+
+		return data;
+	};
+	$rootScope.$watch('username',function(nu,old,scope){
+		if(nu && nu != old) Pinterest();
+	});
+	return Pinterest;
+});
+
+angular.bootstrap(document,['mosaic']);
+</script>
+</body>
+</html>
