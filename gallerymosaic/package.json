@@ -1,0 +1,45 @@
+{
+  "name": "mosaic",
+  "version": "0.0.0",
+  "description": "random exercise",
+  "repository": "https://github.com/jimmont/demos.git",
+  "keywords": ["angular","pinterest"],
+  "bugs":{ "url" : "https://github.com/jimmont/project/issues", "email" : "github@jimmont.com" },
+  "dependencies": {
+    "express": "~4.0",
+    "compression": "~1.0",
+    "forever": "~0.10"
+  },
+  "devDependencies": {
+    "karma": "~0.12",
+    "protractor": "~0.21",
+    "phantomjs": "~1.9",
+    "karma-phantomjs-launcher": "~0.1",
+    "karma-ie-launcher": "~0.1",
+    "heapdump": "*",
+    "karma-junit-reporter": "~0.2",
+    "karma-jasmine": "~0.1",
+    "jasmine-reporters":"~0.4",
+    "jasmine-node":"~1.14",
+    "karma-coverage": "~0.2",
+    "request": "~2",
+    "frisby": "~0.8"
+  },
+  "license": "Apache, Version 2.0",
+  "scripts": {
+    "start": "node ./serv.js",
+
+    "test-api":"./node_modules/jasmine-node/bin/jasmine-node test/api/",
+    "test": "./node_modules/karma/bin/karma start test/karma.conf.js",
+    "test-e2e": "./node_modules/protractor/bin/protractor test/protractor-conf.js",
+    "test-e2e-debug": "./node_modules/protractor/bin/protractor debug test/protractor-conf.js",
+    "test-e2e-headless": "./node_modules/protractor/bin/protractor test/protractor-conf-headless.js",
+    "test-single-run": "./node_modules/karma/bin/karma start test/karma.conf.js --single-run",
+    "test-unit-headless": "./node_modules/karma/bin/karma start test/karma.conf.js --single-run --browsers PhantomJS",
+    "debug": "node-inspector & node --debug-brk serv.js",
+
+    "jenkins-config-backup":"scp -i ~/key-file user@address:/var/lib/jenkins/jobs/PROJECT/config.xml jenkins-config.xml",
+    "webdriver-update": "./node_modules/protractor/bin/webdriver-manager update",
+    "webdriver-start": "./node_modules/protractor/bin/webdriver-manager start --standalone"
+  }
+}
