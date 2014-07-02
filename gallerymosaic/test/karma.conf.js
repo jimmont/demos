@@ -4,9 +4,9 @@ module.exports = function(config){
 
     files : [
       'app/js/ng/angular.js',
-      'app/js/ng/angular-*.js',
+//      'app/js/ng/angular-*.js',
       'test/lib/angular/angular-mocks.js',
-      'app/js/**/*.js',
+//      'app/js/packery.js',
       'test/unit/**/*.js'
     ],
     // junit and dots recommended per karma-runner Jenkins CI instructions (link below)
@@ -16,7 +16,7 @@ module.exports = function(config){
       // do not include tests or libraries
       // (these files will be instrumented by Istanbul)
       'app/js/app.js': ['coverage'],
-      'app/js/project*.js': ['coverage']
+    //  'app/js/project*.js': ['coverage']
     },
     // optionally, configure the reporter
     coverageReporter: {
