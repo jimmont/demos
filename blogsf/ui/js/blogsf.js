@@ -90,7 +90,7 @@ angular.module('blogsf',
 	var uuid = '2f7c8395-e82b-46f3-814c-25818ef9cd4a'
 		,base = 'http://ui­blog.herokuapp.com/Blog/api/'
 		;
-	return {
+	var api = {
 	/** blog api
 
 	 * 200 = SUCCESS
@@ -121,9 +121,60 @@ angular.module('blogsf',
 
 	 */
 	 route: function(id){
-	 	return base + (id ? (id + '/') : '');
+	 	return base + (id || '');
 	 }
-	 ,fn: function(){}
+	 ,$http: $http
+	 ,http: function(args){
+	 	args = angular.extend({
+	 		cache: false
+	 		,params: {uuid: uuid}
+	 	}, args);
+	 	console.log('$http>',args);
+	 	return $http(args);
+	 }
+	 ,posts: function(){
+	 	return api.http({
+	 		url: api.route()
+	 	});
+	 }
+	 ,post: function(id){
+	 	return api.http({
+	 		url: api.route(id || '-FAIL-')
+	 	});
+	 }
+	 ,create: function(postData){
+	 	return api.http({
+	 		url: api.route()
+			,method: 'POST'
+	 		,data: postData // see above
+	 	});
+	 }
+	 ,update: function(postData){
+	 	return api.http({
+	 		url: api.route(postData.id)
+			,method: 'POST'
+	 		,data: {
+	 			title: postData.title
+	 			,text: postData.text
+	 		}
+	 	});
+	 }
+	 ,remove: function(id){
+	 	if(!confirm('remove post? '+id)) return;
+	 	return api.http({
+	 		url: api.route(id)
+			,method: 'POST'
+	 		,data: {operation: 'delete'}
+	 	});
+	 }
+	 ,wipe: function(){
+	 	if(!confirm('remove all the posts?')) return;
+	 	return api.http({
+	 		url: api.route()
+			,method: 'DELETE'
+		});
+	 }
 	};
+	return api;
 })
 ;
