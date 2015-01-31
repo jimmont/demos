@@ -11,11 +11,8 @@ angular.module('blogsf',
 	});
 	// resize usage: $rootScope.$watch('windowWidth',function(newVal, oldVal){ ... });
 	var path, template = {
-		// shared template
-		"home.html": "home again"
-		,"blog.html": "blog"
 		// pieces and parts
-		,"404.html": "<p>Sorry, couldn't find <a href='{{url}}'><code>{{url}}</code></a></p>"	
+		"404.html": "<p>Sorry, couldn't find <a href='{{url}}'><code>{{url}}</code></a></p>"	
 		//util
 		,"params.html":"<h1>params</h1><div ng-repeat='(key, val) in params'>{{key}}:{{val}}</div>"
 	};
@@ -33,7 +30,7 @@ angular.module('blogsf',
 		$scope.currentLocation = $location.path().split('/')[1]
 		$scope.params = $routeParams;
 		$scope.params.view = section[0] || '';
-		$scope.content = ['part.html'];
+		$scope.content = ['blog.html'];
 	}}
 
 	}).$get();
@@ -88,5 +85,45 @@ angular.module('blogsf',
 			$scope.shared = {};
 		}
 	}
+})
+.factory('api', function($http){
+	var uuid = '2f7c8395-e82b-46f3-814c-25818ef9cd4a'
+		,base = 'http://ui­blog.herokuapp.com/Blog/api/'
+		;
+	return {
+	/** blog api
+
+	 * 200 = SUCCESS
+	 * 400 = FAIL
+
+	 * get all
+	 * GET http://ui­blog.herokuapp.com/Blog/api/?uuid=<uuid>
+	 * JSON {blog: {posts: [{id: 123, text: '', title:'', timestampe:'<timefmt>'}, post, post...]}
+
+	 * get post
+	 * GET http://ui­blog.herokuapp.com/Blog/api/<id>?uuid=<uuid>
+	 * JSON {post: {id: 123, text: '', title:'', timestampe:'<timefmt>'}}
+
+	 * create post
+	 * POST http://ui­blog.herokuapp.com/Blog/api/?uuid=<uuid>
+	 * params{ title: <title>, text: <text> }
+
+	 * update post
+	 * POST http://ui­blog.herokuapp.com/Blog/api/<id>?uuid=<uuid>
+	 * params{ title: <title>, text: <text> }
+
+	 * delete post
+	 * POST http://ui­blog.herokuapp.com/Blog/api/<id>?uuid=<uuid>
+	 * params{ operation: delete }
+
+	 * delete all
+	 * DELETE http://ui­blog.herokuapp.com/Blog/api/?uuid=<uuid>
+
+	 */
+	 route: function(id){
+	 	return base + (id ? (id + '/') : '');
+	 }
+	 ,fn: function(){}
+	};
 })
 ;
