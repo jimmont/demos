@@ -77,19 +77,29 @@ angular.module('blogsf',
 		}
 	}
 })
+.directive('post',function(){
+	return {
+		restrict: 'E'
+		,scope: {post: '='}
+		,templateUrl: 'post.html' 
+		,link: function(scope, element, attrs){
+			
+		}
+	}
+})
 .directive('blogShared',function(){
 	return {
 		restrict: 'A'
 		,scope: true
 		,controller: function($scope, blogApi){
-			$scope.shared = {};
-				debugger;
+			$scope.shared = {loading: true};
 			blogApi.posts()
 			.success(function(res){
-				debugger;
+				$scope.shared.posts = res.posts;
+				$scope.shared.loading = false;
 			})
 			.error(function(err){
-				debugger;
+				$scope.shared.loading = false;
 			})
 		}
 	}
@@ -130,16 +140,18 @@ angular.module('blogsf',
 	 */
 	 base: base
 	 ,route: function(id){
-	 debugger
 	 	return base + (id || '');
 	 }
 	 ,$http: $http
+	 ,process: function(post){
+	 	post.timestamp = new Date(post.timestamp);
+	 	return post;
+	 }
 	 ,http: function(args){
 	 	args = angular.extend({
 	 		cache: false
 	 		,params: {uuid: uuid}
 	 	}, args);
-	 	console.log('$http>',args);
 	 	return $http(args);
 	 }
 	 ,posts: function(){

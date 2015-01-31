@@ -467,7 +467,7 @@ b.head.insertBefore(link, b.head.firstChild);
 </script>
 
 <script type="text/ng-template" id="blog.html">
-	<article blog-shared ng-repeat="post in postings track by $index" class="bloggings"><posting>{{ post | json }}</posting></article>
+	<article blog-shared ng-repeat="post in shared.posts track by $index" class="bloggings"><post post="post"></post></article>
 </script>
 
 </body>
