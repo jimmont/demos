@@ -24,7 +24,7 @@ angular.module('blogsf',
 	var routes = $provide.value('routes', {
 	blog: {
 	templateUrl: 'app.html'
-	,controller: function($scope, $rootScope, $routeParams, $location){
+	,controller: function($scope, $rootScope, $routeParams, $location, blogApi){
 		var query = ($routeParams.query || '').split('/');
 		var section = $routeParams.section || [];
 		$scope.currentLocation = $location.path().split('/')[1]
@@ -81,16 +81,24 @@ angular.module('blogsf',
 	return {
 		restrict: 'A'
 		,scope: true
-		,controller: function($scope){
+		,controller: function($scope, blogApi){
 			$scope.shared = {};
+				debugger;
+			blogApi.posts()
+			.success(function(res){
+				debugger;
+			})
+			.error(function(err){
+				debugger;
+			})
 		}
 	}
 })
-.factory('api', function($http){
+.factory('blogApi', function($http){
 	var uuid = '2f7c8395-e82b-46f3-814c-25818ef9cd4a'
-		,base = 'http://ui­blog.herokuapp.com/Blog/api/'
+		,base = 'http://ui-blog.herokuapp.com/Blog/api'
 		;
-	var api = {
+	var blogApi = {
 	/** blog api
 
 	 * 200 = SUCCESS
@@ -120,7 +128,9 @@ angular.module('blogsf',
 	 * DELETE http://ui­blog.herokuapp.com/Blog/api/?uuid=<uuid>
 
 	 */
-	 route: function(id){
+	 base: base
+	 ,route: function(id){
+	 debugger
 	 	return base + (id || '');
 	 }
 	 ,$http: $http
@@ -133,25 +143,25 @@ angular.module('blogsf',
 	 	return $http(args);
 	 }
 	 ,posts: function(){
-	 	return api.http({
-	 		url: api.route()
+	 	return blogApi.http({
+	 		url: blogApi.route()
 	 	});
 	 }
 	 ,post: function(id){
-	 	return api.http({
-	 		url: api.route(id || '-FAIL-')
+	 	return blogApi.http({
+	 		url: blogApi.route(id || '-FAIL-')
 	 	});
 	 }
 	 ,create: function(postData){
-	 	return api.http({
-	 		url: api.route()
+	 	return blogApi.http({
+	 		url: blogApi.route()
 			,method: 'POST'
 	 		,data: postData // see above
 	 	});
 	 }
 	 ,update: function(postData){
-	 	return api.http({
-	 		url: api.route(postData.id)
+	 	return blogApi.http({
+	 		url: blogApi.route(postData.id)
 			,method: 'POST'
 	 		,data: {
 	 			title: postData.title
@@ -161,20 +171,21 @@ angular.module('blogsf',
 	 }
 	 ,remove: function(id){
 	 	if(!confirm('remove post? '+id)) return;
-	 	return api.http({
-	 		url: api.route(id)
+	 	return blogApi.http({
+	 		url: blogApi.route(id || '-FAIL-')
 			,method: 'POST'
 	 		,data: {operation: 'delete'}
 	 	});
 	 }
 	 ,wipe: function(){
 	 	if(!confirm('remove all the posts?')) return;
-	 	return api.http({
-	 		url: api.route()
+	 	return blogApi.http({
+	 		url: blogApi.route()
 			,method: 'DELETE'
 		});
 	 }
 	};
-	return api;
+
+	return blogApi;
 })
 ;
