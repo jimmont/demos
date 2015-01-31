@@ -4,9 +4,7 @@ module.exports = function(config){
 
     files : [
       'app/js/ng/angular.js',
-//      'app/js/ng/angular-*.js',
       'test/lib/angular/angular-mocks.js',
-//      'app/js/packery.js',
       'test/unit/**/*.js'
     ],
     // junit and dots recommended per karma-runner Jenkins CI instructions (link below)
