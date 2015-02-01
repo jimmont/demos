@@ -25,7 +25,6 @@ a:focus{ outline:thin dotted;}
 /* Improve readability when focused and also mouse hovered in all browsers. */
 a:active, a:hover{outline:0;}
 
-.error, .ng-invalid{color:red;}
 .not-selectable, .notSelectable{-webkit-touch-callout:none; -webkit-user-select:none; -khtml-user-select:none; -moz-user-select:none; -ms-user-select:none; user-select:none; }
 .loading{-webkit-animation:loading 800ms ease infinite alternate;}
 @-webkit-keyframes loading{
@@ -57,7 +56,7 @@ sub, sup{font-size:75%;line-height: 0;position: relative;vertical-align: baselin
 sup{top:-0.5em;}
 sub{bottom:-0.25em;}
 /* Define consistent border, margin, and padding. */
-fieldset{border:1px solid #c0c0c0;margin: 0 2px;padding: 0.35em 0.625em 0.75em;}
+fieldset{border:0px solid #c0c0c0;margin: 0 2px;padding: 0.35em 0.625em 0.75em;}
 /* 1. Correct `color` not being inherited in IE 8/9.
  * 2. Remove padding so people aren't caught out if they zero out fieldsets. */
 legend{border:0;/* 1 */padding:0;/* 2 */}
@@ -96,7 +95,7 @@ input[type="search"]::-webkit-search-cancel-button, input[type="search"]::-webki
 button::-moz-focus-inner, input::-moz-focus-inner{border:0;padding: 0;}
 /* 1. Remove default vertical scrollbar in IE 8/9.
  * 2. Improve readability and alignment in all browsers. */
-textarea{overflow:auto;/* 1 */vertical-align:top;/* 2 */}
+textarea{overflow:auto;/* 1 */vertical-align:top;/* 2 */display:block;margin:.1em}
 table{border-collapse:collapse;border-spacing: 0;}
 
 /*default styles */
@@ -396,6 +395,11 @@ button.reset-facets {
 }
 .bar{fill:#333;}
 svg{border:1px solid #aaa;}
+
+
+fieldset.edit, fieldset.add{display:none;}
+.edit fieldset.edit,
+.add fieldset.add{display:block;}
 </style>
 <body ng-view>
 <h4 class="loading">loading</h4>
@@ -444,30 +448,35 @@ b.head.insertBefore(link, b.head.firstChild);
 
 <script type="text/ng-template" id="app.html">
 <nav class="top-nav">
-
+blogsf
 </nav>
 
 <section blog-shared ng-repeat="template in content track by $index" class="content content-view-{{params.view}}"><span ng-include src="template"></span></section>
+
+<post post="{}" mode="create"></post>
 </script>
 <script type="text/ng-template" id="edit-post.html">
-<form novalidate ng-submit="update()" name="posted-{{$id}}">
-	<h4>{{ mode }} post</h4>
+<form novalidate ng-submit="update()" name="posted-{{$id}}" ng-class="{true:'edit', false: 'add'}[state]">
+<fieldset class=edit>
+	<h4>{{ mode }} post 
+	<button ng-click="toggle()" style="display:inline;" type=button>x</button>
+</h4>
 	<input type=hidden ng-model="post.id">
 	<label for="title-{{$id}}"><input required id="title-{{$id}}" type=text ng-model="post.title" placeholder=title>
 	<label for="text-{{$id}}"><textarea id="text-{{$id}}" required ng-model="post.text" placeholder=body></textarea>
 	<input type=submit value=post>
+	<input type=button value="remove post" ng-click="remove()" ng-if="post.id">
+</fieldset>
+<fieldset class=add>
+	<h3>{{ post.title }} <small>{{ post.timestamp | date:'EEEE MMMM d, yyyy h:mm:ss a (\'GMT\'Z)' }}</small></h3>
+	<p post-id="{{ post.id }}">{{ post.text }}</p>
+	<button class=show ng-click="toggle()" type=button>{{ mode }} post</button>
+</fieldset>
 </form>
-
-		,"loginForm.html": '<form class="panel panel-default loginForm" ng-show="showLoginForm" name="login_to_fixstream" novalidate ng-submit="login()"><img style="display:none;padding-left:.5em" src="img/fx-logo.png" alt="FixStream"><div class="error" ng-show="submitted && user.error_msg">{{user.error_msg}}</div><div><input id="email{{time}}" required class="form-control" name="email" type="email" ng-model="user.user_email" placeholder="email@address"> <label for="email{{time}}" class="error" ng-show="login_to_fixstream.email.$dirty && submitted && login_to_fixstream.email.$invalid">email address required</label></div><div><input class="form-control" id="password{{time}}" required name="password" type="password" ng-maxlength="100" ng-model="password" placeholder="password"> <label for="password{{time}}" class="error" ng-show="login_to_fixstream.password.$dirty && submitted && login_to_fixstream.password.$invalid">password required</label></div><input type="submit" class="btn btn-default" value="login"></form>'
-</script>
-
-<script type="text/ng-template" id="post.html">
-<h3>{{ post.title }} <small>{{ post.timestamp | date:'EEEE MMMM d, yyyy h:mm:ss a (\'GMT\'Z)' }}</small></h3>
-<p post-id="{{ post.id }}">{{ post.text }}</p>
 </script>
 
 <script type="text/ng-template" id="blog.html">
-	<article blog-shared ng-repeat="post in shared.posts track by $index" class="bloggings"><post post="post"></post></article>
+	<article blog-shared ng-repeat="post in shared.posts track by $index" class="bloggings"><post post="post" mode="edit"></post></article>
 </script>
 
 </body>

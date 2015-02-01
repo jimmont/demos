@@ -80,10 +80,56 @@ angular.module('blogsf',
 .directive('post',function(){
 	return {
 		restrict: 'E'
-		,scope: {post: '='}
-		,templateUrl: 'post.html' 
-		,link: function(scope, element, attrs){
-			
+		,templateUrl: 'edit-post.html' 
+		,controller: function($scope, blogApi){
+			$scope.state = false;
+			$scope.toggle = function(){
+				this.state = !this.state;
+			};
+
+			$scope.remove = function(){
+				blogApi.remove(this.post.id)
+				.success(function(res){
+				// TODO refresh shared.blog.item.filter to find it and pull it out
+				}).error(function(err){
+					// update view by warning of failure
+					// TODO
+					console.warn('change failed>',err);
+					debugger
+				});
+				
+			};
+			$scope.update = function(){
+				var post = this.post;
+				if(!post.title || !post.text) return;
+
+				var req;
+				console.log('update/create post>',post);
+				if(post.id){
+					req = blogApi.update(post);
+				}else{
+					req = blogApi.create(post);
+				};
+				req.success(function(res){
+					// update view by removing form or clearing it
+					if(/create/i.test($scope.mode)){
+						$scope.post = {};
+						$scope.toggle();
+					}else{
+						// TODO leave edit mode
+						// TODO if create then insert change into listing
+						$scope.toggle();
+					};
+				}).error(function(err){
+					// update view by warning of failure
+					// TODO debug as it currently results in fail
+					console.warn('change failed>',err);
+					// $scope.toggle();
+				});
+			};
+		}
+		,link: function(scope, element, attr){
+			scope.mode = attr.mode;
 		}
 	}
 })
