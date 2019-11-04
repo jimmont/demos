@@ -26,10 +26,69 @@ cite{display:block;font-style:italic;}
 </style>
 </head><body>
 <nav><a href="../">🏡</a></nav>
+<p>
+Please see Google Web Developer fundamentals for Web Components <a href="https://developers.google.com/web/fundamentals/web-components/best-practices">best-practices</a>.
+</p>
 
+<data-grid>data-grid</data-grid>
+<script type="module">
+/*
+this is an example to show basics, it's not ideal, however it answers the question with a working example
+*/
+class DataTable extends HTMLElement {
+	constructor() {
+		super();
+		// static, or request, or setup default and update later...
+		this.dataList = [[1,2], [7,9]];
+		this.dataHeaders = ['one', 'two'];
 
-
-<script>
-
+		// only work with shadowRoot in constructor, never the HTML element
+		// minimize work here too, do that later in lifecycle callbacks
+		this.attachShadow({mode:'open'}).innerHTML = `
+<!-- NOTE how this th styling doesn't work because the table is rendered into the HTML, not the shadowRoot -->
+<style>:host th{text-align:left;}</style>
+<button>update table</button>
+<slot></slot>
+		`;
+		this.shadowRoot.querySelector('button').addEventListener('click', this.updateTable.bind(this));
+	}
+	connectedCallback(){
+	// change attributes, html, etc here
+		this.createTable();
+	}
+	random(){
+		const max=Date.now();
+		return Math.floor(Math.random() * Math.floor(max));
+	}
+	updateTable(){
+		this.dataList = this.dataList.map((row, i)=>{
+			return row.map(this.random);
+		});
+		this.createTable();
+	}
+	createTable() {
+		// use the render cycle
+		cancelAnimationFrame(this._createTable);
+		this._createTable = requestAnimationFrame(()=>{
+		// html will go into the shadowRoot slot (default or whatever is targeted)
+		this.innerHTML = `
+<table>
+<thead><tr>
+	${ this.dataHeaders.reduce((html, col, i)=>{
+		return html + `<th>${i+1} ${col}</th>`;
+	}, '') }
+</tr></thead>
+<tbody>
+<tr>${ this.dataList.map((row, i)=>{
+	return `<td>${ row.join('</td><td>') }</td>`;
+}).join('</tr><tr>') }</tr>
+</tbody>
+</table>
+		`;
+		});
+	}
+}
+// define the element, if not already
+customElements.get('data-grid') || customElements.define('data-grid', DataTable);
 </script>
 </body></html>
