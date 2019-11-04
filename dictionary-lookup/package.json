@@ -7,8 +7,5 @@
 		"start": "node app"
 	}
 	,"dependencies": {
-	    "express": "^4.17.1",
-		,"express-dot":""
-		,"jsdom":""
 	}
 }

@@ -6,8 +6,6 @@
   "keywords": ["angular","pinterest"],
   "bugs":{ "url" : "https://github.com/jimmont/project/issues", "email" : "github@jimmont.com" },
   "dependencies": {
-    "express": "^4.17.1",
-    "compression": "^1.7.4"
   },
   "devDependencies": {
     "karma": "~0.12",
