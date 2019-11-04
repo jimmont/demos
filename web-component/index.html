@@ -46,7 +46,13 @@ class DataTable extends HTMLElement {
 		// minimize work here too, do that later in lifecycle callbacks
 		this.attachShadow({mode:'open'}).innerHTML = `
 <!-- NOTE how this th styling doesn't work because the table is rendered into the HTML, not the shadowRoot -->
-<style>:host th{text-align:left;}</style>
+<style>
+/* styles shadow content in the host */
+:host th{text-align:left;color:blue;}
+/* only top-level selectors */
+::slotted(table){text-align:right;}
+</style>
+<table style="width:100%;"><tr><th>ok</th></tr></table>
 <button>update table</button>
 <slot></slot>
 		`;
