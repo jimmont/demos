@@ -15,7 +15,7 @@ iframe{border: 1;}
 <the-map></the-map>
 <script>
 // the nextbus api is only available over http
-if(location.protocol === 'https:') location.replace('http:'+location.host+location.pathname);
+if(location.protocol === 'https:' && confirm('redirect to http?')) location.replace('http:'+location.host+location.pathname);
 </script>
 <script src="./d3.v5.js"></script>
 <script type=module src="the-map.js"></script>
