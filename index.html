@@ -32,7 +32,7 @@ requestAnimationFrame(()=>{
 var anchor = document.createElement('a');
 document.querySelector('nav').appendChild(
 `
-README.md
+parks/ - native Web Components simple fetch display demo
 amzn/
 barchart/
 blogsf/
@@ -49,12 +49,13 @@ train-routes/
 tree/
 web-component/
 sfmuni/
-`.split(/[\n\r]+/).sort().reduce(function(parent, item, i){
+`.split(/[\n\r]+/).reduce(function(parent, item, i){
 	var txt = item.trim();
 	if(!txt || /index.html/.test(txt)) return parent;
 
 	var node = anchor.cloneNode(true);
-	node.setAttribute('href', './'+txt);
+	const href = './'+txt.trim().replace(/\s.*/,'');
+	node.setAttribute('href', href);
 	node.textContent = txt;
 	parent.appendChild(node);
 
