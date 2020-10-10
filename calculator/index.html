@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" >
+<meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+<title>exercise ForUsAll</title>
+<meta name="description" content="TODO">
+<meta name="ROBOTS" content="NONE,NOINDEX,NOARCHIVE,NOFOLLOW">
+<style>
+html,body{margin:0;padding:0;min-width:320px;min-height:320px;box-sizing:border-box;background-color:#cf0;}
+body{
+	padding:1rem;min-height:100vh;min-width:100vw;background-color:#fff;
+	font-size:1rem;font-family:system, system-ui, -apple-system, ".SFNSText-Regular", "San Francisco", "Oxygen", "Ubuntu", "Roboto", "Segoe UI", "Helvetica Neue", "Lucida Grande", sans-serif; line-height: 1.3;
+}
+pre, code{font-size:inherit;font-family:"SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", "Lucida Console", monospace;}
+iframe{border: 1;}
+fieldset{border:0;padding:0;margin:0.2em 0 .5em 0;}
+</style>
+</head>
+<body>
+<section></section>
+<script src="https://unpkg.com/react/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/redux"></script>
+<script src="https://unpkg.com/react-redux"></script>
+<script src="https://unpkg.com/htm"></script>
+<script>
+const jsx = htm.bind(React.createElement);
+
+function reducer(model={
+	total: 0,
+}, action={type:'', payload: null}){
+	let store;
+	switch(action.type){
+	case 'TOTAL_COST':
+		store = { total: action.payload.total };
+	break;
+	default:
+		store = model;
+	}
+	return store;
+}
+const actions = {
+	updateTotal: function({ principal, years, rate }){
+		return {
+			type: 'TOTAL_COST',
+			payload: {total: principal * (1 + (rate * years))}
+		}
+	}
+};
+const store = Redux.createStore(reducer);
+
+class App extends React.Component{
+	constructor(props){
+		super(props);
+		this.state = {
+			principal: 1000,
+			years: 7,
+			rate: 0.025
+		};
+		this.submit = this.submit.bind(this);
+		this.update = this.update.bind(this);
+	}
+	componentWillMount(){
+		this.submit(new CustomEvent('init'));
+	}
+	update(e){
+		//const val = e.target.value * 1;
+		let { valueAsNumber, value, name } = e.target;
+		const state = {...this.state};
+		if(isNaN(valueAsNumber)){
+			valueAsNumber = 0;
+		}
+		state[ name ] = valueAsNumber;
+		this.props.dispatch( actions.updateTotal(state) );
+		this.setState({[name]: valueAsNumber});
+	}
+	submit(e){
+		e.preventDefault();
+		this.props.dispatch( actions.updateTotal(this.state) );
+	}
+	//TOTAL = principal * (1 + (rate * years))
+	render(){
+		const { principal, years, rate } = this.state;
+		return jsx`<form onSubmit=${ this.submit }>
+<style>
+label{display:block;}
+</style>
+<h2>interest calculator</h2>
+<h1><label> total <span>${ this.props.total.toFixed(2) }</span> </label></h1>
+<fieldset>
+<label> principal <input name=principal onInput=${ this.update } type="number" min=1 defaultValue=${ principal } /> </label>
+<label> years <input name=years onInput=${ this.update }type="number" min=1 max=300 defaultValue=${ years } /> </label>
+<label> rate <input name=rate onInput=${ this.update } type="number" min=0 max=100 defaultValue=${ rate } step=0.0001 /> </label>
+</fieldset>
+ <button>calculate</button>
+</form>`;
+	}
+}
+
+const ConnectedApp = ReactRedux.connect((store)=>{return {total:store.total}})(App);
+
+ReactDOM.render(
+	jsx`<${ReactRedux.Provider} store=${ store }> <${ ConnectedApp } key=${ Date.now() }> <//> <//>`,
+//	jsx`<${ App } total="0" key=${ Date.now() }> <//> `,
+	document.querySelector('section')
+);
+
+requestAnimationFrame(()=>{
+	console.log(`🚀 tests running → any failures will be shown below`);
+	requestAnimationFrame(()=>{ console.log(`🍻 tests done → any failures are shown above`); });
+
+	const { updateTotal } = actions;
+	let result = updateTotal({principal: 5000, years: 5, rate: 0.025}).payload;
+	let expected = 5625;
+	console.assert(Math.round(result.total) === expected, `expected total ${ result.total } to be ${ expected }`, result);
+
+});
+
+/*
+
+Front End Engineering
+Take Home Exercise
+
+About this exercise
+Hi! We use take home exercises as a quick way to get a sense of how you code. We want to
+respect your time, so please don’t spend more than two hours in total on this task. We
+mean it! You don’t get extra points for spending longer. Stop when you hit the two hour mark.
+It’s okay if it’s not completely done - just send us what you have.
+Email your project files within five working days to ben.werdmuller@forusall.com. Feel free to
+ask questions as you go!
+
+Your task
+You should build a simple interest calculator that, given a principal, rate of annual interest, and
+number of years, will display the total principal plus interest.
+
+The formula for calculating principal with accrued interest is:
+TOTAL = principal * (1 + (rate * years))
+
+For example, a $5,000 loan with an annual interest rate of 2.5% over 5 years will total $5,625:
+5000 * (1 + (0.025 * 5)) = 5625
+Restrictions
+You should build this project using React and Redux. Beyond that, feel free to use anything you
+think will be useful. The calculator should consist of at least one component (it’s up to you if you
+want to nest components). A calculation should dispatch a Redux event that updates state with
+the result. The calculator should therefore read the result from state in order to display it. For
+bonus points, write Jest tests which check that the calculator returns the correct value.
+Your goal here is not to make something pretty - just something that works. We’re not assessing
+your interface design.
+
+
+*/
+</script>
+<noscript><p>please enable javascript</p></noscript>
+</body></html>
