@@ -8,13 +8,20 @@
 html{background:#def;}
 body {margin:0;padding:3rem;font-size:1rem;font-family:system, system-ui, -apple-system, ".SFNSText-Regular", "San Francisco", "Oxygen", "Ubuntu", "Roboto", "Segoe UI", "Helvetica Neue", "Lucida Grande", sans-serif; line-height: 1.3; background-color:#fff;color:#000;min-height:100vh;min-width:100vw;box-sizing:border-box;}
 
-us-park{background-color:#fff;}
+us-park{background-color:#fff;position:relative;display:block;}
 us-park:hover,
 us-park:focus-within{box-shadow:0 0 5px #ddd}
 us-park img{border:1px solid #000;width:50px;transition:all 1s;float:left;margin-block-end:0.3em;margin-inline-end:0.5em;}
 us-park img:hover:not(:focus){animation:450ms linear 0s 1 tip;}
 us-park img:focus{width:200px;}
 us-park p{margin:0;}
+us-park a[img]{position:absolute;top:-1em;right:3em;background#fff;text-decoration:none;display:block;padding:0.5em;background:#fff;box-shadow:0 0 5px #ddd;transition:opacity 0.5s;opacity:0;}
+us-park a[img]:before{content:'📷';}
+
+us-park a[img]:focus,
+us-park a[img]:hover{box-shadow: 0 0 5px #aaa;}
+us-park:hover a[img],
+us-park:focus-within a[img]{opacity:1;}
 
 @keyframes tip{ 0% {transform:rotate(0deg);} 25% {transform:rotate(3deg);} 75% {transform:rotate(-3deg);} 100% {transform:rotate(0deg);} }
 </style>
@@ -39,7 +46,7 @@ customElements.define('us-park', class USPark extends HTMLElement{
 customElements.define('us-national-parks', class NationParks extends HTMLElement{
 	constructor(){
 		super();
-		this.data = {};
+		this.data = [];
 		this.update = this.update.bind(this);
 		this.render = this.render.bind(this);
 		this.attachShadow({mode: 'open'}).innerHTML = `
@@ -95,14 +102,19 @@ customElements.define('us-national-parks', class NationParks extends HTMLElement
 	item(data, i){
 		return `
 <us-park index=${i} name="${ encodeURIComponent( data.Name ) }">
-<img large-src="${ data.Thumbnail }" src="${ data.Thumbnail }" alt="${ data.Name }, a park in ${ data.Location }" tabindex=0>
+<img src="${ data.Thumbnail }" alt="${ data.Name }, a park in ${ data.Location }" tabindex=0>
 <p>
 	<b>${ data.Name }</b> ${ data.Location }, established ${ data.Established }
+	<br>${ data.Area }
+	<br>${ data['Recreation visitors'] }
 	<br>${ data.Description }
+	<a img title="large image" href="${ data.Image }" target="_blank" tabindex=-1> </a>
 </p>
 </us-park>`;
 	}
 	render(data=this.data){
+		this.data = data;
+
 		cancelAnimationFrame(this._render);
 		this._render = requestAnimationFrame(()=>{
 			this.error.textContent = '';
