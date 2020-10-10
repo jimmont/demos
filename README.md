@@ -1,7 +1,10 @@
 demos
 =====
 
+see also
+https://jimmont.github.io/demos/
+
 miscellaneous code with varying levels of attention to detail. 
 
-using vim + chrome devtools on a 13" macbook
+mostly using vim + chrome devtools 
 
