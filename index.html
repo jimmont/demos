@@ -32,11 +32,10 @@ requestAnimationFrame(()=>{
 var anchor = document.createElement('a');
 document.querySelector('nav').appendChild(
 `
-parks/parks.html - native Web Components simple fetch display demo
 amzn/
 barchart/
 blogsf/
-calculator/
+calculator.html
 carousel/
 dictionary-lookup/
 find_a_in_b/
@@ -46,10 +45,11 @@ gallerymosaic/
 graphing/
 index.html
 minesweeper/
+parks.html - native Web Components simple fetch display demo
+sfmuni/
 train-routes/
 tree/
 web-component/
-sfmuni/
 `.split(/[\n\r]+/).reduce(function(parent, item, i){
 	var txt = item.trim();
 	if(!txt || /index.html/.test(txt)) return parent;
@@ -67,4 +67,3 @@ sfmuni/
 });
 </script>
 </body></html>
-
